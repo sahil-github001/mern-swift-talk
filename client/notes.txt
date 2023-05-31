@@ -1,0 +1,6 @@
+yarn package manager
+yarn = to install node_modules
+yarn dev = run developement
+
+install tailwind =  yarn add tailwindcss postcss autoprefixer
+                    npx tailwindcss init -p
