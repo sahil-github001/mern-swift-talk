@@ -8,6 +8,7 @@ const Avatar = ({ userId, username }) => {
     "bg-yellow-200",
     "bg-teal-200",
   ];
+  
   const userIdBase10 = parseInt(userId, 16);
   const colorIndex = userIdBase10 % colors.length;
   const color = colors[colorIndex];
