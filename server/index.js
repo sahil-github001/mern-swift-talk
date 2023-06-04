@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const User = require("./models/User");
+const ws = require("ws");
 
 require("dotenv").config();
 
@@ -28,7 +29,6 @@ mongoose
     console.error("Error connecting to MongoDB:", error);
   });
 
-app.listen(PORT, () => console.log(`listening to ${PORT}`));
 app.use(express.json());
 app.use(cookieParser());
 const bcryptSalt = bcrypt.genSaltSync(10);
@@ -117,9 +117,7 @@ app.post("/login", async (req, res) => {
     const passOk = bcrypt.compareSync(password, foundUser.password);
     if (passOk) {
       jwt.sign(
-        { userId: foundUser._id, username },
-        jwtSecret,
-        {},
+        { userId: foundUser._id, username }, jwtSecret, {},
         (err, token) => {
           if (err) throw err;
           res.cookie("token", token, { sameSite: "none", secure: true }).json({
@@ -127,6 +125,43 @@ app.post("/login", async (req, res) => {
           });
         }
       );
+    }
+  }
+});
+
+const server = app.listen(PORT, () => console.log(`listening to ${PORT}`));
+
+const wss = new ws.WebSocketServer({ server });
+wss.on("connection", (connection, req) => {
+  const cookies = req.headers.cookie;
+  if (cookies) {
+    // console.log(cookies);
+
+    const tokenCookieString = cookies.split(";").find((str) => str.startsWith("token="));
+    /*
+    cookies.split(";"): This line splits the cookies string into an array of individual cookie strings, 
+    using the semicolon (;) as the delimiter. For example, if cookies is "token=abc123;  
+    the result will be "token=abc123".
+
+    .find((str) => str.startsWith("token=")): This line uses the find() method on the array of cookie 
+    strings to find the first cookie string that starts with "token=". The startsWith() method checks 
+    if a string starts with a specific substring. In this case, it checks if each cookie string 
+    starts with "token=". Once the first matching cookie string is found, it is returned.
+
+    const tokenCookieString = ...: This line assigns the found cookie string (e.g., "token=abc123") 
+    to the tokenCookieString variable.
+    */
+    if(tokenCookieString){
+      const token = tokenCookieString.split("=")[1];
+      if(token){
+        jwt.verify(token, jwtSecret, {}, (err, userData) => {
+          if(err) throw err;
+          const { userId, username } = userData;
+          connection.userId = userId;
+          connection.username = username;
+          
+        })
+      }
     }
   }
 });
