@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const bcrypt = require("bcryptjs");
 const User = require("./models/User");
 
 require("dotenv").config();
@@ -30,6 +31,7 @@ mongoose
 app.listen(PORT, () => console.log(`listening to ${PORT}`));
 app.use(express.json());
 app.use(cookieParser());
+const bcryptSalt = bcrypt.genSaltSync(10);
 
 app.use(
   cors({
@@ -66,34 +68,65 @@ app.get("/profile", (req, res) => {
 app.post("/register", async (req, res) => {
   const { username, password } = req.body;
   try {
-    const createdUser = await User.create({ username, password });
-    jwt.sign(
-      { userId: createdUser._id, username },
-      jwtSecret,
-      {},
-      (err, token) => {
-        if (err) throw err;
-        res
-          .cookie("token", token, { sameSite: "none", secure: true })
-          .status(201)
-          .json({
-            id: createdUser._id,
-          });
-        /*
-          sameSite: "none": This option sets the SameSite attribute of the cookie to "none". 
-          The SameSite attribute is used to prevent cross-site request forgery (CSRF) attacks. 
-          By setting it to "none", the cookie can be sent with cross-site requests, which is often 
-          required for scenarios like Single Sign-On (SSO) across different domains.
-
-          secure: true: This option sets the Secure attribute of the cookie to true. The Secure 
-          attribute is used to ensure that the cookie is only sent over secure HTTPS connections. 
-          By setting it to true, the cookie will only be transmitted over HTTPS, providing an 
-          additional layer of security.
-        */
-      }
-    );
+    const hashedPassword = bcrypt.hashSync(password, bcryptSalt);
+    const findUser = await User.findOne({ username });
+    if (findUser) {
+      res.status(401).json("user already registered");
+    } else {
+      const createdUser = await User.create({
+        username: username,
+        password: hashedPassword,
+      });
+      jwt.sign(
+        { userId: createdUser._id, username },
+        jwtSecret,
+        {},
+        (err, token) => {
+          if (err) throw err;
+          res
+            .cookie("token", token, { sameSite: "none", secure: true })
+            .status(201)
+            .json({
+              id: createdUser._id,
+            });
+          /* 
+            sameSite: "none": This option sets the SameSite attribute of the cookie to "none". 
+            The SameSite attribute is used to prevent cross-site request forgery (CSRF) attacks. 
+            By setting it to "none", the cookie can be sent with cross-site requests, which is often 
+            required for scenarios like Single Sign-On (SSO) across different domains.
+  
+            secure: true: This option sets the Secure attribute of the cookie to true. The Secure 
+            attribute is used to ensure that the cookie is only sent over secure HTTPS connections. 
+            By setting it to true, the cookie will only be transmitted over HTTPS, providing an 
+            additional layer of security.
+          */
+        }
+      );
+    }
   } catch (err) {
     if (err) throw err;
     res.status(500).json("error");
+  }
+});
+
+// Login user
+app.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+  const foundUser = await User.findOne({ username });
+  if (foundUser) {
+    const passOk = bcrypt.compareSync(password, foundUser.password);
+    if (passOk) {
+      jwt.sign(
+        { userId: foundUser._id, username },
+        jwtSecret,
+        {},
+        (err, token) => {
+          if (err) throw err;
+          res.cookie("token", token, { sameSite: "none", secure: true }).json({
+            id: foundUser._id,
+          });
+        }
+      );
+    }
   }
 });
