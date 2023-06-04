@@ -117,7 +117,9 @@ app.post("/login", async (req, res) => {
     const passOk = bcrypt.compareSync(password, foundUser.password);
     if (passOk) {
       jwt.sign(
-        { userId: foundUser._id, username }, jwtSecret, {},
+        { userId: foundUser._id, username },
+        jwtSecret,
+        {},
         (err, token) => {
           if (err) throw err;
           res.cookie("token", token, { sameSite: "none", secure: true }).json({
@@ -137,7 +139,9 @@ wss.on("connection", (connection, req) => {
   if (cookies) {
     // console.log(cookies);
 
-    const tokenCookieString = cookies.split(";").find((str) => str.startsWith("token="));
+    const tokenCookieString = cookies
+      .split(";")
+      .find((str) => str.startsWith("token="));
     /*
     cookies.split(";"): This line splits the cookies string into an array of individual cookie strings, 
     using the semicolon (;) as the delimiter. For example, if cookies is "token=abc123;  
@@ -151,17 +155,26 @@ wss.on("connection", (connection, req) => {
     const tokenCookieString = ...: This line assigns the found cookie string (e.g., "token=abc123") 
     to the tokenCookieString variable.
     */
-    if(tokenCookieString){
+    if (tokenCookieString) {
       const token = tokenCookieString.split("=")[1];
-      if(token){
+      if (token) {
         jwt.verify(token, jwtSecret, {}, (err, userData) => {
-          if(err) throw err;
+          if (err) throw err;
           const { userId, username } = userData;
           connection.userId = userId;
           connection.username = username;
-          
-        })
+        });
       }
     }
   }
+  [...wss.clients].forEach((client) => {
+    client.send(
+      JSON.stringify({
+        online: [...wss.clients].map((c) => ({
+          userId: c.userId,
+          username: c.username,
+        })),
+      })
+    );
+  });
 });
