@@ -4,3 +4,4 @@ yarn dev = run developement
 
 install tailwind =  yarn add tailwindcss postcss autoprefixer
                     npx tailwindcss init -p
+yarn add lodash

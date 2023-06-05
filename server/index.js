@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const User = require("./models/User");
+const Message = require("./models/Message");
 const ws = require("ws");
 
 require("dotenv").config();
@@ -135,10 +136,9 @@ const server = app.listen(PORT, () => console.log(`listening to ${PORT}`));
 
 const wss = new ws.WebSocketServer({ server });
 wss.on("connection", (connection, req) => {
+  // read username and id from the cookie for this connection
   const cookies = req.headers.cookie;
   if (cookies) {
-    // console.log(cookies);
-
     const tokenCookieString = cookies
       .split(";")
       .find((str) => str.startsWith("token="));
@@ -167,6 +167,28 @@ wss.on("connection", (connection, req) => {
       }
     }
   }
+  connection.on("message", async (message) => {
+    const messageData = JSON.parse(message.toString()); 
+    const {recipient, text} = messageData;
+    if (recipient && text){
+      const messageDoc = await Message.create({
+        sender: connection.userId,
+        recipient,
+        text
+      });
+      [...wss.clients]
+        .filter((c) => c.userId === recipient)
+        .forEach((c) => c.send(JSON.stringify({
+          text,
+          sender: connection.userId,
+          recipient,
+          id: messageDoc._id,
+        })));
+    }
+
+  });
+
+  // send online who are in online
   [...wss.clients].forEach((client) => {
     client.send(
       JSON.stringify({
