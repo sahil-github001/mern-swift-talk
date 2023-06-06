@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef } from "react";
 import Avatar from "./Avatar";
 import Logo from "./Logo";
 import { UserContext } from "./UserContext";
@@ -10,6 +10,7 @@ const Chat = () => {
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [newMessageText, setNewMessageText] = useState("");
   const [messages, setMessages] = useState([]);
+  const divUnderMessages = useRef();
   const { username, id } = useContext(UserContext);
   useEffect(() => {
     const ws = new WebSocket("ws://localhost:4000");
@@ -63,6 +64,15 @@ const Chat = () => {
     setNewMessageText("");
   };
 
+  useEffect(() => {
+    /*
+    divUnderMessages is a reference to a DOM element, and current is a property or method that retrieves
+     the current value of that element
+    */
+    const div = divUnderMessages.current;
+    div.scrollIntoView({ behaviour: "smooth", block: "end" });
+  }, [messages]);
+
   const onlinePeopleExclOurUser = { ...onlinePeople };
   // Deletes the user with the specified ID from the `onlinePeople` object.
   delete onlinePeopleExclOurUser[id];
@@ -98,7 +108,7 @@ const Chat = () => {
         ))}
       </div>
       <div className="flex flex-col bg-blue-200 w-2/3 p-2">
-        <div className="flex-grow no-scrollbar overflow-y-auto">
+        <div className="flex-grow no-scrollbar overflow-y-auto pb-4">
           {!selectedUserId && (
             <div className="h-full flex items-center justify-center">
               <div className="text-gray-400">
@@ -110,7 +120,9 @@ const Chat = () => {
             <div className="">
               {messagesWithoutDupes.map((message) => (
                 // eslint-disable-next-line react/jsx-key
-                <div className={(message.sender === id ? "text-right" : "text-left")}>
+                <div
+                  className={message.sender === id ? "text-right" : "text-left"}
+                >
                   <div
                     className={
                       "text-left inline-block p-2 m-2 rounded-md  " +
@@ -126,6 +138,7 @@ const Chat = () => {
               ))}
             </div>
           )}
+          <div ref={divUnderMessages}></div>
         </div>
 
         {!!selectedUserId && (
