@@ -53,6 +53,21 @@ app.get("/", (_req, res) => {
   res.json("Test works");
 });
 
+const getUserDataFromRequest = async (req) => {
+  return new Promise((resolve, reject) => {
+    const token = req.cookies?.token;
+    if (token) {
+      jwt.verify(token, jwtSecret, {}, (err, userData) => {
+        if (err) throw err;
+        resolve(userData);
+      });
+    } else {
+      reject("no token");
+    }
+  });
+
+}
+
 app.get("/profile", (req, res) => {
   const token = req.cookies?.token;
   if (token) {
@@ -63,6 +78,17 @@ app.get("/profile", (req, res) => {
   } else {
     res.status(401).json("no token");
   }
+});
+
+app.get("/messages/:userId", async (req, res) => {
+  const {userId} = req.params;
+  const userData = await getUserDataFromRequest(req);
+  const ourUserId= userData.userId;
+  const messages = await Message.find({
+    sender: {$in: [userId, ourUserId]},
+    recipient: {$in: [ourUserId, userId]}
+  }).sort({created: -1});
+  res.json(messages);
 });
 
 // Register new User
