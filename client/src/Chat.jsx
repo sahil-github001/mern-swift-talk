@@ -14,10 +14,19 @@ const Chat = () => {
   const divUnderMessages = useRef();
   const { username, id } = useContext(UserContext);
   useEffect(() => {
+    connectToWs();
+  }, []);
+  const connectToWs = () => {
     const ws = new WebSocket("ws://localhost:4000");
     setWs(ws);
     ws.addEventListener("message", handleMessage);
-  }, []);
+    ws.addEventListener("close", () => {
+      setTimeout(() => {
+        console.log("Disconnected, Trying to reconnect");
+        connectToWs();
+      }, 1000);
+    });
+  };
   const showOnlinePeople = (peopleArray) => {
     /*
     In JavaScript, the Set is a built-in object that allows you to store unique values of any type,
@@ -75,8 +84,8 @@ const Chat = () => {
   }, [messages]);
 
   useEffect(() => {
-    if(selectedUserId) {
-      axios.get("/messages/"+selectedUserId)
+    if (selectedUserId) {
+      axios.get("/messages/" + selectedUserId);
     }
   }, [selectedUserId]);
 
