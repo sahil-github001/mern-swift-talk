@@ -68,7 +68,7 @@ const Chat = () => {
         text: newMessageText,
         sender: id,
         recipient: selectedUserId,
-        id: Date.now(),
+        _id: Date.now(),
       },
     ]);
     setNewMessageText("");
@@ -85,7 +85,9 @@ const Chat = () => {
 
   useEffect(() => {
     if (selectedUserId) {
-      axios.get("/messages/" + selectedUserId);
+      axios.get("/messages/" + selectedUserId).then((res) => {
+        setMessages(res.data);
+      })
     }
   }, [selectedUserId]);
 
@@ -98,7 +100,7 @@ const Chat = () => {
   uniqueness is computed. The order of result values is determined by the order they occur in the array. 
   The iteratee is invoked with one argument:
   */
-  const messagesWithoutDupes = uniqBy(messages, "id");
+  const messagesWithoutDupes = uniqBy(messages, "_id");
 
   return (
     <div className="flex h-screen">
@@ -135,8 +137,8 @@ const Chat = () => {
           {!!selectedUserId && (
             <div className="">
               {messagesWithoutDupes.map((message) => (
-                // eslint-disable-next-line react/jsx-key
                 <div
+                  key={message._id}
                   className={message.sender === id ? "text-right" : "text-left"}
                 >
                   <div

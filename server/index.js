@@ -1,4 +1,4 @@
-const express = require("express");
+  const express = require("express");
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
@@ -87,7 +87,7 @@ app.get("/messages/:userId", async (req, res) => {
   const messages = await Message.find({
     sender: {$in: [userId, ourUserId]},
     recipient: {$in: [ourUserId, userId]}
-  }).sort({created: -1});
+  }).sort({created: 1});
   res.json(messages);
 });
 
@@ -208,7 +208,7 @@ wss.on("connection", (connection, req) => {
           text,
           sender: connection.userId,
           recipient,
-          id: messageDoc._id,
+          _id: messageDoc._id,
         })));
     }
 
