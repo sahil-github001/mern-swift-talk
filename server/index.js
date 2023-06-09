@@ -91,6 +91,11 @@ app.get("/messages/:userId", async (req, res) => {
   res.json(messages);
 });
 
+app.get("/people", async (req, res) => {
+  const users = await User.find({}, {"_id:": 1, username: 1});
+  res.json(users);
+})
+
 // Register new User
 app.post("/register", async (req, res) => {
   const { username, password } = req.body;
