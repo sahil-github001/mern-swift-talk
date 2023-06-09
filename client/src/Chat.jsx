@@ -1,5 +1,4 @@
 import { useContext, useEffect, useState, useRef } from "react";
-import Avatar from "./Avatar";
 import Logo from "./Logo";
 import { UserContext } from "./UserContext";
 import { uniqBy } from "lodash";
@@ -47,7 +46,9 @@ const Chat = () => {
     if ("online" in messageData) {
       showOnlinePeople(messageData.online);
     } else if ("text" in messageData) {
-      setMessages((prev) => [...prev, { ...messageData }]);
+      if (messageData.sender === selectedUserId) {
+        setMessages((prev) => [...prev, { ...messageData }]);
+      }
     }
   };
 
@@ -68,13 +69,6 @@ const Chat = () => {
         file,
       })
     );
-    /*
-    (prev) is the argument to the function. It is the current value of the messages state variable.
-    ([...prev, {text: newMessageText, isOur: true}]) is the return value of the function.
-    It is a new array that contains the previous messages,
-    cas well as a new message with the text newMessageText and the isOur property set to true.
-    */
-
     if (file) {
       axios.get("/messages/" + selectedUserId).then((res) => {
         setMessages(res.data);
@@ -222,44 +216,27 @@ const Chat = () => {
                     {/* {message.sender === id ? "Me: " : ""} */}
                     {message.text}
                     {message.file && (
-                      <div className="flex items-center h-10 gap-1">
-                        {message.sender === id ? (
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                            className="w-6 h-6"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 019 9v.375M10.125 2.25A3.375 3.375 0 0113.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 013.375 3.375M9 15l2.25 2.25L15 12"
-                            />
-                          </svg>
-                        ) : (
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                            className="w-6 h-6"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-                            />
-                          </svg>
-                        )}
-
+                      <div className="">
                         <a
                           target="_blank"
-                          className="underline"
-                          href={axios.defaults.baseURL + "/uploads/" + message.file}
+                          className="flex items-center gap-1 border-b"
+                          href={
+                            axios.defaults.baseURL + "/uploads/" + message.file
+                          }
+                          rel="noreferrer"
                         >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            className="w-4 h-4"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M18.97 3.659a2.25 2.25 0 00-3.182 0l-10.94 10.94a3.75 3.75 0 105.304 5.303l7.693-7.693a.75.75 0 011.06 1.06l-7.693 7.693a5.25 5.25 0 11-7.424-7.424l10.939-10.94a3.75 3.75 0 115.303 5.304L9.097 18.835l-.008.008-.007.007-.002.002-.003.002A2.25 2.25 0 015.91 15.66l7.81-7.81a.75.75 0 011.061 1.06l-7.81 7.81a.75.75 0 001.054 1.068L18.97 6.84a2.25 2.25 0 000-3.182z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
                           {message.file}
                         </a>
                       </div>

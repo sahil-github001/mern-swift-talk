@@ -6,7 +6,7 @@ import { useContext } from "react";
 const RegisterAndLoginForm = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoginOrRegister, setIsLoginOrRegister] = useState("register");
+  const [isLoginOrRegister, setIsLoginOrRegister] = useState("login");
 
   const { setUsername: setLoggedInUsername, setId } = useContext(UserContext);
   // The setUsername property is renamed to setLoggedInUsername using the colon (:) notation.

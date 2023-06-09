@@ -12,7 +12,7 @@ const fs = require("fs");
 require("dotenv").config();
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = 4000;
 const MONGO_URL = process.env.MONGO_URL;
 const jwtSecret = process.env.JWT_SECRET;
 const dbName = process.env.DB_NAME;
@@ -249,7 +249,7 @@ wss.on("connection", (connection, req) => {
       fs.writeFile(path, bufferData, () => {
         console.log("file saved: "+path);
       });
-    }
+    } 
     if (recipient && (text || file)){
       const messageDoc = await Message.create({
         sender: connection.userId,
