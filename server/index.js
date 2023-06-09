@@ -163,6 +163,10 @@ app.post("/login", async (req, res) => {
   }
 });
 
+app.post("/logout", async (req, res) => {
+  res.cookie("token", "", { sameSite: "none", secure: true }).json("ok");
+})
+
 const server = app.listen(PORT, () => console.log(`listening to ${PORT}`));
 
 
@@ -187,6 +191,7 @@ wss.on("connection", (connection, req) => {
     connection.ping();
     connection.deathTimer = setTimeout(() => {
       connection.isAlive = false;
+      clearInterval(connection.timer);
       connection.terminate();
       notifyAboutOnlinePeople();
       console.log("dead");
@@ -195,7 +200,7 @@ wss.on("connection", (connection, req) => {
 
   connection.on("pong", () => {
     clearTimeout(connection.deathTimer);
-  })
+  }) 
 
   // read username and id from the cookie for this connection
   const cookies = req.headers.cookie;
