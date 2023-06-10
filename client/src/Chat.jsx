@@ -14,9 +14,11 @@ const Chat = () => {
   const [messages, setMessages] = useState([]);
   const divUnderMessages = useRef();
   const { username, id, setId, setUsername } = useContext(UserContext);
+
   useEffect(() => {
     connectToWs();
-  }, []);
+  }, [selectedUserId]);
+
   const connectToWs = () => {
     const ws = new WebSocket("ws://localhost:4000");
     setWs(ws);
@@ -29,20 +31,16 @@ const Chat = () => {
     });
   };
   const showOnlinePeople = (peopleArray) => {
-    /*
-    In JavaScript, the Set is a built-in object that allows you to store unique values of any type,
-    whether it's primitive values or object references. The Set object stores these values in such
-    a way that each value can only occur once within the set.
-    */
-    // const people = new Set();
     const people = {};
     peopleArray.forEach(({ userId, username }) => {
       people[userId] = username;
     });
     setOnlinePeople(people);
   };
+
   const handleMessage = (ev) => {
     const messageData = JSON.parse(ev.data);
+    console.log({ ev, messageData });
     if ("online" in messageData) {
       showOnlinePeople(messageData.online);
     } else if ("text" in messageData) {
@@ -60,9 +58,9 @@ const Chat = () => {
     });
   };
 
-  const sendMessage = (ev, file = null) => {
+  async function sendMessage(ev, file = null) {
     if (ev) ev.preventDefault();
-    ws.send(
+    await ws.send(
       JSON.stringify({
         recipient: selectedUserId,
         text: newMessageText,
@@ -70,10 +68,13 @@ const Chat = () => {
       })
     );
     if (file) {
-      axios.get("/messages/" + selectedUserId).then((res) => {
-        setMessages(res.data);
-      });
+      setTimeout(() => {
+        axios.get("/messages/" + selectedUserId).then((res) => {
+          setMessages(res.data);
+        });
+      }, 500);
     } else {
+      setNewMessageText("");
       setMessages((prev) => [
         ...prev,
         {
@@ -83,11 +84,10 @@ const Chat = () => {
           _id: Date.now(),
         },
       ]);
-      setNewMessageText("");
     }
-  };
+  }
 
-  const sentFile = (ev) => {
+  function sendFile(ev) {
     const reader = new FileReader();
     reader.readAsDataURL(ev.target.files[0]);
     reader.onload = () => {
@@ -96,7 +96,7 @@ const Chat = () => {
         data: reader.result,
       });
     };
-  };
+  }
 
   useEffect(() => {
     /*
@@ -110,8 +110,8 @@ const Chat = () => {
   useEffect(() => {
     axios.get("/people").then((res) => {
       const offlinePeopleArr = res.data
-        .filter((p) => p._id !== id) // exclude our own user
-        .filter((p) => !Object.keys(onlinePeople).includes(p._id)); // exclude online people
+        .filter((p) => p._id !== id)
+        .filter((p) => !Object.keys(onlinePeople).includes(p._id));
       const offlinePeople = {};
       offlinePeopleArr.forEach((p) => {
         offlinePeople[p._id] = p;
@@ -259,7 +259,7 @@ const Chat = () => {
               className="bg-white border p-2 flex-grow rounded-sm"
             />
             <label className="bg-blue-100 p-2 text-gray-700 rounded-sm cursor-pointer">
-              <input type="file" className="hidden" onChange={sentFile} />
+              <input type="file" className="hidden" onChange={sendFile} />
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"

@@ -1,13 +1,11 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import axios from "axios";
 import { UserContext } from "./UserContext";
-import { useContext } from "react";
 
 const RegisterAndLoginForm = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoginOrRegister, setIsLoginOrRegister] = useState("login");
-
   const { setUsername: setLoggedInUsername, setId } = useContext(UserContext);
   // The setUsername property is renamed to setLoggedInUsername using the colon (:) notation.
 
@@ -19,21 +17,6 @@ const RegisterAndLoginForm = () => {
     setLoggedInUsername(username);
     setId(data.id);
 
-    /* response look like
-    { data: {
-    // The data returned from the "/register" endpoint
-      },
-      status: 200, // The HTTP status code of the response
-      statusText: 'OK', // The status message of the response
-      headers: {
-        // The headers of the response
-      },
-      config: {
-        // The axios request configuration
-      },
-      // ...
-    }
-    */
   };
   return (
     <div className="bg-blue-100 h-screen flex items-center">
