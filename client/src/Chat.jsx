@@ -40,7 +40,6 @@ const Chat = () => {
 
   const handleMessage = (ev) => {
     const messageData = JSON.parse(ev.data);
-    console.log({ ev, messageData });
     if ("online" in messageData) {
       showOnlinePeople(messageData.online);
     } else if ("text" in messageData) {
@@ -51,7 +50,7 @@ const Chat = () => {
   };
 
   const logout = () => {
-    axios.post("/logout").then(() => {
+    axios.post("/auth/logout").then(() => {
       setWs(null);
       setId(null);
       setUsername(null);

@@ -5,3 +5,16 @@ yarn add jsonwebtoken
 yarn add cors
 yarn add bcryptjs
 yarn add ws 
+
+
+
+sameSite: "none": This option sets the SameSite attribute of the cookie to "none". 
+The SameSite attribute is used to prevent cross-site request forgery (CSRF) attacks. 
+By setting it to "none", the cookie can be sent with cross-site requests, which is often 
+required for scenarios like Single Sign-On (SSO) across different domains.
+    
+secure: true: This option sets the Secure attribute of the cookie to true. The Secure 
+attribute is used to ensure that the cookie is only sent over secure HTTPS connections. 
+By setting it to true, the cookie will only be transmitted over HTTPS, providing an 
+additional layer of security.
+ 

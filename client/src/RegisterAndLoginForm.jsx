@@ -12,8 +12,7 @@ const RegisterAndLoginForm = () => {
   const handleSubmit = async (ev) => {
     ev.preventDefault();
     const url = isLoginOrRegister === "register" ? "register" : "login";
-
-    const { data } = await axios.post(url, { username, password });
+    const { data } = await axios.post(`/auth/${url}`, { username, password });
     setLoggedInUsername(username);
     setId(data.id);
 
