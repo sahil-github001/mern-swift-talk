@@ -1,9 +1,9 @@
 import { useContext, useEffect, useState, useRef } from "react";
-import Logo from "./Logo";
-import { UserContext } from "./UserContext";
+import Logo from "../components/Logo";
+import { UserContext } from "../context/UserContext";
 import { uniqBy } from "lodash";
 import axios from "axios";
-import Contact from "./Contact";
+import Contact from "../components/Contact";
 
 const Chat = () => {
   const [ws, setWs] = useState(null);
