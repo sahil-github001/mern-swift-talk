@@ -1,62 +1,142 @@
 import { useState, useContext } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
+import "../styles/loaderOne.css";
+import { Helmet } from "react-helmet";
 
 const RegisterAndLoginForm = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoginOrRegister, setIsLoginOrRegister] = useState("login");
-  const { setUsername: setLoggedInUsername, setId } = useContext(UserContext);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   // The setUsername property is renamed to setLoggedInUsername using the colon (:) notation.
+  const { setUsername: setLoggedInUsername, setId } = useContext(UserContext);
 
   const handleSubmit = async (ev) => {
     ev.preventDefault();
-    const url = isLoginOrRegister === "register" ? "register" : "login";
-    const { data } = await axios.post(`/auth/${url}`, { username, password });
-    setLoggedInUsername(username);
-    setId(data.id);
+    setError(null);
+    if (!username && !password) {
+      setError("Please enter a username and password");
+      return;
+    }
+    // Validate username and password
+    const usernameRegex = /^[a-zA-Z0-9_]{4,16}$/; // Regular expression for username validation
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/; // Regular expression for password validation
 
+    if (!usernameRegex.test(username)) {
+      setError("Invalid username. Username should be 4-16 characters long and can only contain letters, numbers, and underscores.");
+      return;
+    }
+
+    if (!passwordRegex.test(password)) {
+      setError("Invalid password. Password should be at least 8 characters long, and include at least one letter and one number.");
+      return;
+    }
+
+    // Reset error state
+    setError(null);
+    const url = isLoginOrRegister === "register" ? "register" : "login";
+    await axios.post(`/auth/${url}`, { username, password })
+      .then((response) => {
+        const { data } = response;
+        setLoggedInUsername(username);
+        setId(data.id);
+      })
+      .catch((error) => {
+        if (error.response) {
+          const { data } = error.response;
+          setError(data.error); // Set the error message from the response data
+        } else {
+          setError("An error occurred during form submission");
+        }
+      });
   };
+
+  const handleRegisterAndLoginPage = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoginOrRegister((prevState) => prevState === "register" ? "login" : "register");
+      setUsername("");
+      setPassword("");
+      setError(null);
+      setIsLoading(false);
+    }, 500);
+  };
+
   return (
-    <div className="bg-blue-100 h-screen flex items-center">
-      <form onSubmit={handleSubmit} className="w-64 mx-auto mb-12">
-        <input
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          type="text"
-          placeholder="username"
-          className="block w-full rounded-sm p-2 mb-2 border"
-        />
-        <input
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          type="password"
-          placeholder="password"
-          className="block w-full rounded-sm p-2 mb-2 border"
-        />
-        <button className="bg-blue-600 text-white block w-full rounded-sm p-2">
-          {isLoginOrRegister === "register" ? "Register" : "Login"}
-        </button>
-        <div className="text-center mt-2">
+    <>
+      <Helmet>
+        <title>{isLoginOrRegister === "register" ? "Register" : "Login"}</title>
+      </Helmet>
+
+      <div className="bg-[#e9eaeb] h-screen flex  items-center justify-center relative">
+
+        {isLoading && (
+          <div className="absolute z-10 w-full h-full flex justify-center items-center bg-black-rgba">
+            <div className="custom-loader"></div>
+          </div>
+        )}
+
+        <form
+          onSubmit={handleSubmit}
+          className={
+            `bg-[#28425a] w-2/5 flex flex-col gap-3 p-10 rounded-xl transition-all duration-300 ` +
+            (isLoginOrRegister === "login" && " bg-slate-800")
+          }
+        >
+          <h1 className={`text-white text-4xl ` +(isLoginOrRegister === "login" && "text-3xl")}>
+            {isLoginOrRegister === "register" ? " Welcome To SwiftTalk" : "Welcome back to SwiftTalk!"}
+          </h1>
+          <h3 className="text-white">
+            {isLoginOrRegister === "register" ? "Let's create your account" : "Please enter your login credentials below to access your account"}
+          </h3>
+          <input
+            type="text"
+            className="rounded-md p-2"
+            placeholder="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+          <input
+            type="password"
+            className="rounded-md p-2"
+            placeholder="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          {error && <div className=" text-red-500 max-w-prose">{error}</div>}
+          <button type="submit" className="bg-blue-700 w-fit mx-auto text-white py-1 px-3 rounded-xl">
+            {isLoginOrRegister === "register" ? "Register" : "Login"}
+          </button>
           {isLoginOrRegister === "register" && (
-            <div>
-              Already a member?
-              <button onClick={() => setIsLoginOrRegister("login")}>
+            <div className="text-gray-200 text-center">
+              <span>Already a member?</span>
+              <button
+                type="button"
+                className="underline text-cyan-300"
+                onClick={handleRegisterAndLoginPage}
+              >
                 Login
               </button>
             </div>
           )}
           {isLoginOrRegister === "login" && (
-            <div>
-              dont have an account?
-              <button onClick={() => setIsLoginOrRegister("register")}>
+            <div className="text-gray-200 text-center">
+              <span>dont have an account?</span>
+              <button
+                type="button"
+                className="underline text-cyan-300"
+                onClick={handleRegisterAndLoginPage}
+              >
                 Register
               </button>
             </div>
           )}
-        </div>
-      </form>
-    </div>
+        </form>
+      </div>
+    </>
   );
 };
 
