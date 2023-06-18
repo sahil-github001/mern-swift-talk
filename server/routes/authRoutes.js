@@ -68,30 +68,13 @@ router.post("/register", async (req, res) => {
       return res.status(401).json({ error: "User already registered" });
     }
     const hashedPassword = bcrypt.hashSync(password, bcryptSalt);
-    const createdUser = await User.create({
+    await User.create({
       username: username,
       password: hashedPassword,
     });
-    // Generate and sign a JWT token
-    jwt.sign(
-      { userId: createdUser._id, username },
-      jwtSecret,
-      {},
-      (err, token) => {
-        if (err) {
-          return res
-            .status(500)
-            .json({ error: "Internal Server Error jwt sign" });
-        }
-        // Set the token as a cookie and return the user ID
-        res
-          .cookie("token", token, { sameSite: "none", secure: true })
-          .status(201)
-          .json({
-            id: createdUser._id,
-          });
-      }
-    );
+    res.status(201).json({
+      message: "User created successfully",
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
